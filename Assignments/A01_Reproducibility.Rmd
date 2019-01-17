@@ -30,22 +30,22 @@ The completed exercise is due on Thursday, 17 January, 2018 before class begins.
 ### Question
 Why are reproducible practices becoming the norm in data analytics?
 
-> Answer: 
+> Answer:
 
 ### Question
 What are your previous experiences with data analytics, R, and Git? Include both formal and informal training.
 
-> Answer: 
+> Answer:
 
 ### Question
 Are there any components of the course about which you feel confident?
 
-> Answer: 
+> Answer:
 
 ### Question
 Are there any components of the course about which you feel apprehensive?
 
-> Answer: 
+> Answer:
 
 
 ## 2) GitHub
@@ -53,6 +53,5 @@ Are there any components of the course about which you feel apprehensive?
 ### Your Repository
 Provide a link below to your course repository in GitHub. Make sure you have pulled all recent changes from the course repository (https://github.com/KateriSalk/Environmental_Data_Analytics) and that you have updated your course README file. 
 
-> Answer: 
-
+> Answer:
 
