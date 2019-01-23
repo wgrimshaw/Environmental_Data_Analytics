@@ -82,20 +82,14 @@ names(student_scores) <- c("Name", "Score", "Pass")
 ```{r If Function}
 # 10
 pass <- function(x) {
-  if(x >= 50) {
-    TRUE
-  }
-  else {
-    FALSE
-  }
+  y <- ifelse(x >= 50, TRUE, FALSE) 
+  return(y)
 }
 
 # 11
-apply(, FUN = pass)
-length(test_scores)
 pass(test_scores)
 ```
 
 12. QUESTION: Which option of `if` and `else` vs. `ifelse` worked? Why?
 
-> ANSWER: 
+> ANSWER: ifelse worked for the function because it returns a value of the same shape as the input. In this case, the input was a vector and the output was a vector.
