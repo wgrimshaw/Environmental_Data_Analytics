@@ -71,9 +71,9 @@ Note: In the Knit menu in the Editor, you will need to specify whether your knit
 USGS.flow.data <- read.csv("./Data/Raw/USGS_Site02085000_Flow_Raw.csv")
 
 # What happens if we don't assign a name to our imported dataset?
-#read.csv("./Data/Raw/USGS_Site02085000_Flow_Raw.csv")
+read.csv("./Data/Raw/USGS_Site02085000_Flow_Raw.csv") # just prints them in the console
 
-# Another option is to choose with your browser
+# Another option is to choose with your browser, but this is not as reproducible
 # read.csv(file.choose())
 
 # To import .txt files, use read.table rather than read.csv
@@ -101,21 +101,21 @@ colnames(USGS.flow.data) <- c("agency_cd", "site_no", "datetime",
                               "gage.height.max", "gage.height.max.approval", 
                               "gage.height.min", "gage.height.min.approval", 
                               "gage.height.mean", "gage.height.mean.approval")
-str(USGS.flow.data)
-dim(USGS.flow.data)
+str(USGS.flow.data) # gives structure information for the variable
+dim(USGS.flow.data) # gives dimenions, rows by columns
 length(USGS.flow.data)
 
-head(USGS.flow.data)
+head(USGS.flow.data) # first six rows of the dataframe
 head(USGS.flow.data, 10)
-tail(USGS.flow.data, 5)
-USGS.flow.data[30000:30005, c(3, 8, 14)]
+tail(USGS.flow.data, 5) # final rows of data, called to only give final 5 rows
+USGS.flow.data[30000:30005, c(3, 8, 14)] # subset of data
 
 class(USGS.flow.data$datetime)
 class(USGS.flow.data$discharge.mean)
 class(USGS.flow.data$gage.height.mean)
 
-summary(USGS.flow.data)
-summary(USGS.flow.data$discharge.mean)
+summary(USGS.flow.data) # summary for each column
+summary(USGS.flow.data$discharge.mean) # summary for one queried column
 summary(USGS.flow.data$gage.height.mean)
 
 ```

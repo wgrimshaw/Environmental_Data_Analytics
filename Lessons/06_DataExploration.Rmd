@@ -8,7 +8,6 @@ fig_width: 5
 fig_height: 2.5
 editor_options: 
   chunk_output_type: console
-
 ---
 
 ## LESSON OBJECTIVES
@@ -63,6 +62,7 @@ R will often import dates as factors or characters rather than dates. To fix, th
 Formatting of dates in R: 
 
 %d  day as number (0-31)
+%D  month/day/two-digit year
 %m  month (00-12, can be e.g., 01 or 1)
 %y  2-digit year
 %Y  4-digit year
@@ -82,9 +82,9 @@ help(as.Date)
 # (code must be uncommented)
 today <- Sys.Date()
 format(today, format = "%B")
-#format(today, format = "")
-#format(today, format = "")
-#format(today, format = "")
+format(today, format = "%a")
+format(today-23, format = "%A %B %dst, %Y")
+format(today, format = "")
 
 USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%m/%d/%y") 
 ```
