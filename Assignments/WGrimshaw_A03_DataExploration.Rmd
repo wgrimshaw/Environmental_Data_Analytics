@@ -33,7 +33,8 @@ Check your working directory, load necessary packages (tidyverse), and upload th
 getwd() ## in Assignments folder
 ## load tidyverse package
 library(tidyverse)
-## read in Lakes data, by first backing out of Assignments folder
+## read in Lakes data from Data folder
+## If working directory defaults to assignments folder, check the knitting directory
 Lake_Data <- read.csv("../Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
 ```
 

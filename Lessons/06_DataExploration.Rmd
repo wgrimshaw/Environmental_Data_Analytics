@@ -92,17 +92,17 @@ USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%m/%d/%y")
 Note that for every date prior to 1969, R has assigned the date in the 2000s rather than the 1900s. This can be fixed with an `ifelse` statement inside a function. Run through the code below and write what is happening in the comment above each line.
 
 ```{r}
-# 
+# reformat the datetime column to two digit year, then month, then day
 USGS.flow.data$datetime <- format(USGS.flow.data$datetime, "%y%m%d")
 
-#
+# initialize a function that amends 19 or 20 to the front of the date, 19 if the year is after '18, 20 if before '18. datetime is a string.
 create.early.dates <- (function(d) {
        paste0(ifelse(d > 181231,"19","20"),d)
        })
-#
+# runs the function on the datetime column
 USGS.flow.data$datetime <- create.early.dates(USGS.flow.data$datetime)
 
-#
+# convert the datetime column to date format, reading it as four digit year, two digit month, two digit day
 USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%Y%m%d") 
 
 ```
@@ -120,9 +120,11 @@ Question: What types of research questions might make it favorable to remove NAs
 > Answer: 
 
 ```{r}
-USGS.flow.data.complete <- na.omit(USGS.flow.data)
+USGS.flow.data.complete <- na.omit(USGS.flow.data) # removes entire row if NA in any column of that row
 dim(USGS.flow.data)
 dim(USGS.flow.data.complete)
+
+## function complete.cases tells you which cases have complete rows
 
 mean(USGS.flow.data.complete$discharge.mean)
 sd(USGS.flow.data.complete$discharge.mean)
@@ -142,7 +144,7 @@ Visualize count data for categorical variables.
 
 ```{r, fig.height = 3, fig.width = 4}
 ggplot(USGS.flow.data.complete, aes(x = discharge.mean.approval)) +
-  geom_bar()
+  geom_bar() # works well for categorical variables
 ```
 
 ### Histogram (function: geom_histogram)
@@ -152,7 +154,7 @@ Visualize distributions of values for continuous numerical variables. What is ha
 ```{r, fig.height = 3, fig.width = 4}
 #
 ggplot(USGS.flow.data.complete) +
-  geom_histogram(aes(x = discharge.mean))
+  geom_histogram(aes(x = discharge.mean)) # instead of geom_bar for quantitative measurements
 
 #
 ggplot(USGS.flow.data.complete) +
@@ -164,10 +166,10 @@ ggplot(USGS.flow.data.complete) +
 
 #
 ggplot(USGS.flow.data.complete, aes(x = discharge.mean)) +
-  geom_histogram(binwidth = 10) + 
-  scale_x_continuous(limits = c(0, 500))
+  geom_histogram(binwidth = 10) +
+  scale_x_continuous(limits = c(0, 500)) # zoom into x range from 0 to 500
   
-#
+# can also name ggplots, though not done here
 ggplot(USGS.flow.data.complete) +
   geom_histogram(aes(x = gage.height.mean))
 
@@ -177,14 +179,15 @@ ggplot(USGS.flow.data.complete) +
 An alternate to a histogram is a frequency polygon graph (distributions of values for continuous numerical variables). Instead of displaying bars,  counts of continuous variables are displayed as lines. This is advantageous if you want to display multiple variables or categories of variables at once.
 
 ```{r, fig.height = 3, fig.width = 4}
-#
+# aesthetics within geoms to show different variables
 ggplot(USGS.flow.data.complete) +
   geom_freqpoly(aes(x = gage.height.mean), bins = 50) +
   geom_freqpoly(aes(x = gage.height.min), bins = 50, color = "blue") +
   geom_freqpoly(aes(x = gage.height.max), bins = 50, color = "red") +
   scale_x_continuous(limits = c(0, 10))
+# more low counts of minimums, more high counts of maximums
 
-#
+# colors the data and subdivides it by the variable gage.height.mean.approval
 ggplot(USGS.flow.data.complete) +
   geom_freqpoly(aes(x = gage.height.mean, color = gage.height.mean.approval), bins = 50) +
   scale_x_continuous(limits = c(0, 10)) +
@@ -206,11 +209,11 @@ A box-and-whisker plot is yet another alternative to histograms (distributions o
 An alternate option is a violin plot, which displays density distributions, somewhat like a hybrid of the box-and-whiskers and the frequency polygon plot.
 
 ```{r, fig.height = 3, fig.width = 4}
-#
+# two box plots by approval category
 ggplot(USGS.flow.data.complete) +
   geom_boxplot(aes(x = gage.height.mean.approval, y = gage.height.mean))
 
-#
+# group boxplots by gage.height.mean, grouping every unit increase
 ggplot(USGS.flow.data.complete) +
   geom_boxplot(aes(x = gage.height.mean, y = discharge.mean, group = cut_width(gage.height.mean, 1)))
 
