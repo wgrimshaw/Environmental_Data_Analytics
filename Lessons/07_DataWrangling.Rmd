@@ -50,7 +50,7 @@ What is the best way to wrangle data? There are multiple ways to arrive at a spe
 `dplyr` is a package in R that includes functions for data manipulation (i.e., data wrangling or data munging). `dplyr` is included in the tidyverse package, so you should already have it installed on your machine. The functions act as verbs for data wrangling processes. For more information, run this line of code:
 
 ```{r, results = "hide"}
-vignette("dplyr")
+vignette("dplyr") # in depth dplyr help
 ```
 
 
@@ -59,23 +59,23 @@ vignette("dplyr")
 Filtering allows us to choose certain rows (observations) in our dataset.
 
 A few relevant commands: 
-`==`
-`!=`
+`==` equals
+`!=` is not
 `<`
 `<=`
 `>`
 `>=`
-`&`
-`|`
+`&` and
+`|` or
 
 ```{r}
-class(NTL.phys.data$lakeid)
-class(NTL.phys.data$depth)
+class(NTL.phys.data$lakeid) # factor means its categorical
+class(NTL.phys.data$depth) # continuous numeric variable
 
-# matrix filtering
+# matrix filtering, depth =0 and all columns
 NTL.phys.data.surface1 <- NTL.phys.data[NTL.phys.data$depth == 0,]
 
-# dplyr filtering
+# dplyr filtering, same operation as above, first select data fram, then what subset we want
 NTL.phys.data.surface2 <- filter(NTL.phys.data, depth == 0)
 NTL.phys.data.surface3 <- filter(NTL.phys.data, depth < 0.25)
 
@@ -86,6 +86,8 @@ head(NTL.phys.data.surface2)
 dim(NTL.phys.data.surface2)
 head(NTL.phys.data.surface3)
 dim(NTL.phys.data.surface3)
+
+# when we subset, the row names stayed the same as in the original dataframe
 
 # Choose multiple conditions to filter
 summary(NTL.phys.data$lakename)
@@ -99,18 +101,22 @@ NTL.phys.data.PeterPaul3 <- filter(NTL.phys.data, lakename %in% c("Paul Lake", "
 # Choose a range of conditions of a numeric or integer variable
 summary(NTL.phys.data$daynum)
 NTL.phys.data.JunethruOctober1 <- filter(NTL.phys.data, daynum > 151 & daynum < 305)
-NTL.phys.data.JunethruOctober2 <- filter(NTL.phys.data, daynum > 151, daynum < 305)
+NTL.phys.data.JunethruOctober2 <- filter(NTL.phys.data, daynum > 151, daynum < 305) # , operates as & in this case
 NTL.phys.data.JunethruOctober3 <- filter(NTL.phys.data, daynum >= 152 & daynum <= 304)
 NTL.phys.data.JunethruOctober4 <- filter(NTL.phys.data, daynum %in% c(152:304))
 
 # Exercise: 
 # filter NTL.phys.data for the year 1999
 # what code do you need to use, based on the class of the variable?
-class(NTL.phys.data$year4)
+class(NTL.phys.data$year4) # integer
+
+NTL.phys.data.1999 <- filter(NTL.phys.data, year4 == 1999)
 
 # Exercise: 
 # filter NTL.phys.data for Tuesday Lake from 1990 through 1999.
 
+NTL.phys.data.Tuesday90s <- filter(NTL.phys.data, lakename == "Tuesday Lake" &
+                                     year4 >= 1990, year4 <= 1999)
 
 ```
 Question: Why don't we filter using row numbers?
@@ -122,13 +128,21 @@ Question: Why don't we filter using row numbers?
 Arranging allows us to change the order of rows in our dataset. By default, the arrange function will arrange rows in ascending order.
 
 ```{r}
-NTL.phys.data.depth.ascending <- arrange(NTL.phys.data, depth)
+NTL.phys.data.depth.ascending <- arrange(NTL.phys.data, depth, temperature_C) # first depth, then temp
 NTL.phys.data.depth.descending <- arrange(NTL.phys.data, desc(depth))
+
+View(NTL.phys.data.depth.ascending)
 
 # Exercise: 
 # Arrange NTL.phys.data by temperature, in descending order. 
 # Which dates, lakes, and depths have the highest temperatures?
 
+NTL.phys.data.temp.descending <- arrange(NTL.phys.data, desc(temperature_C))
+
+View(NTL.phys.data.temp.descending)
+
+# east long lake had the highest temp in 1998, though east long lake and hummingbird lake each had
+# high temperatures in 
 
 ```
 ### Select
@@ -136,7 +150,8 @@ NTL.phys.data.depth.descending <- arrange(NTL.phys.data, desc(depth))
 Selecting allows us to choose certain columns (variables) in our dataset.
 
 ```{r}
-NTL.phys.data.temps <- select(NTL.phys.data, lakename, sampledate:temperature_C)
+NTL.phys.data.temps <- select(NTL.phys.data, lakename, sampledate, temperature_C)
+# lake name and everything between sampledate and temperature
 
 ```
 ### Mutate
