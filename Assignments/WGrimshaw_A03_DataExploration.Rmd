@@ -31,8 +31,8 @@ Check your working directory, load necessary packages (tidyverse), and upload th
 ```{r Set Up}
 ## check working directory
 getwd() ## in Assignments folder
-## load tidyverse package
-library(tidyverse)
+## load tidyverse package, try suppressing messages to allow knitting
+suppressMessages(library(tidyverse))
 ## read in Lakes data from Data folder
 ## If working directory defaults to assignments folder, check the knitting directory
 Lake_Data <- read.csv("../Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
@@ -84,7 +84,7 @@ head(Lake_Data$sampledate, 10)
 
 Question: Do you want to remove NAs from this dataset? Why or why not?
 
-> ANSWER: 
+> ANSWER: There are many days when irradiance was not measured, but temperature and DO were still measured. There is still useful data analysis to be performed on these data points, but all that information would be lost if we removed all rows with any NAs present. For that reason, I do not think we should remove the NAs.
 
 
 ## 4) Explore your data graphically
@@ -100,31 +100,58 @@ Write R commands to display graphs depicting:
 7. Scatterplot of temperature by depth
 
 ```{r}
-# 1
+# 1 Bar chart of temperature counts
 
-# 2
+ggplot(Lake_Data) +
+  geom_bar(aes(x = temperature_C, color = lakename))
 
-# 3
+# 2 Histogram of temperature across all lakes
 
-# 4
+ggplot(Lake_Data) +
+  geom_histogram(aes(x = temperature_C)) +
+  xlab("Temperature (C)")
 
-# 5
+# 3 Histogram, same as #2, but with 40 bins
+
+ggplot(Lake_Data) +
+  geom_histogram(aes(x = temperature_C), bins = 40) +
+  xlab("Temperature (C)")
+
+# 4 Frequency polygon of temp for each lake
+
+ggplot(Lake_Data) +
+  geom_freqpoly(aes(x = temperature_C, color = lakename)) +
+  scale_color_brewer(palette="Set1")
+
+# 5 Boxplot of temp for each lake
+
+ggplot(Lake_Data) +
+  geom_boxplot(aes(x = lakename, y = temperature_C, color = lakename)) +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.x = element_blank())
 
 # 6
 
-# 7 
+ggplot(Lake_Data) +
+  geom_boxplot(aes(x = depth, y = temperature_C, group = cut_width(depth, 0.25)))
+
+# 7 scatterplot depth vs temp
+
+ggplot(Lake_Data) +
+  geom_point(aes(x = depth, y = temperature_C, color = lakename))
 
 ```
 ## 5) Form questions for further data analysis
 
 What did you find out about your data from the basic summaries and graphs you made? Describe in 4-6 sentences.
 
-> ANSWER: 
+> ANSWER: All lakes appear from the frequency polygons to follow roughly the same temperature distribution, but the boxplots show that there is actually a fair amount of variation in temperature distributions between lakes. Lakes such as Paul Lake and Peter Lake have much more temperature data than Ward Lake and Hummingbird Lake, but we do not know if this is due to more monitoring or because of lake size. Water temperature decreases with water depth, though the temperature of the water levels off around 5 C even when very deep. The temperature data collected have a bimodal distribution, with a peak near 5 C and another peak near 22 C.
 
-What are 3 further questions you might ask as you move forward with  analysis of this dataset?
+What are 3 further questions you might ask as you move forward with analysis of this dataset?
 
-> ANSWER 1: 
+> ANSWER 1: What is the relationship between irradiance and water temperature, and does this vary by lake?
 
-> ANSWER 2: 
+> ANSWER 2: What is the relationship between irradiance and depth, and does this vary by lake?
 
-> ANSWER 3: 
+> ANSWER 3: How do any of the variables, especially dissolved oxygen, change over time? What are the impacts of this change on the ecosystem and what might cause any changes, if present?
