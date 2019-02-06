@@ -1,6 +1,6 @@
 ---
 title: "Assignment 4: Data Wrangling"
-author: "Student Name"
+author: "Walker Grimshaw"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -34,8 +34,36 @@ The completed exercise is due on Thursday, 7 February, 2019 before class begins.
 
 ```{r}
 #1
+getwd() ## in Assignments folder
+suppressMessages(library(tidyverse)) # suppress messages because of knitting LaTex error
+library(lubridate)
+
+Ozone.2017.raw <- read.csv("../Data/Raw/EPAair_O3_NC2017_raw.csv", header = T)
+Ozone.2018.raw <- read.csv("../Data/Raw/EPAair_O3_NC2018_raw.csv", header = T)
+PM25.2017.raw <- read.csv("../Data/Raw/EPAair_PM25_NC2017_raw.csv", header = T)
+PM25.2018.raw <- read.csv("../Data/Raw/EPAair_PM25_NC2018_raw.csv", header = T)
 
 #2
+
+## dimensions
+dim(Ozone.2017.raw)
+dim(Ozone.2018.raw)
+dim(PM25.2017.raw)
+dim(PM25.2018.raw)
+
+## column names
+colnames(Ozone.2017.raw)
+colnames(Ozone.2018.raw)
+colnames(PM25.2017.raw)
+colnames(PM25.2018.raw)
+
+## summary statistics
+summary(Ozone.2017.raw)
+summary(Ozone.2017.raw$Site.Name)
+summary(Ozone.2018.raw)
+summary(PM25.2017.raw)
+summary(PM25.2018.raw)
+
 ```
 
 ## Wrangle individual datasets to create processed files.
@@ -45,14 +73,46 @@ The completed exercise is due on Thursday, 7 February, 2019 before class begins.
 6. Save all four processed datasets in the Processed folder.
 
 ```{r}
-#3
+#3 change date to date format
+class(Ozone.2017.raw$Date) # factor
+Ozone.2017.raw$Date <- as.Date(Ozone.2017.raw$Date, format = "%m/%d/%y")
+class(Ozone.2017.raw$Date) # correctly reformatted to date
+
+Ozone.2018.raw$Date <- as.Date(Ozone.2018.raw$Date, format = "%m/%d/%y")
+PM25.2017.raw$Date <- as.Date(PM25.2017.raw$Date, format = "%m/%d/%y")
+PM25.2018.raw$Date <- as.Date(PM25.2018.raw$Date, format = "%m/%d/%y")
 
 #4
+## use select() to select appropriate columns
+Ozone.2017.processed <- select(Ozone.2017.raw, 
+                               Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC,
+                               COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+Ozone.2018.processed <- select(Ozone.2018.raw, 
+                               Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC,
+                               COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+PM25.2017.processed <- select(PM25.2017.raw, 
+                               Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC,
+                               COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+PM25.2018.processed <- select(PM25.2018.raw, 
+                               Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC,
+                               COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
 
 #5
+## Replace data in AQS_parameter_desc column with "PM2.5"
+PM25.2017.processed$AQS_PARAMETER_DESC <- "PM2.5"
+## could also use PM25.2017.processed <- mutate(PM25.2017.processed, AQS_PARAMETER_DESC = "PM2.5")
+PM25.2018.processed$AQS_PARAMETER_DESC <- "PM2.5"
 
 #6
-
+## don't keep row names
+write.csv(x = Ozone.2017.processed, row.names = F,
+          file = "../Data/Processed/EPAair_O3_NC2017_processed.csv")
+write.csv(x = Ozone.2018.processed, row.names = F,
+          file = "../Data/Processed/EPAair_O3_NC2018_processed.csv")
+write.csv(x = PM25.2017.processed, row.names = F,
+          file = "../Data/Processed/EPAair_PM25_NC2017_processed.csv")
+write.csv(x = PM25.2018.processed, row.names = F,
+          file = "../Data/Processed/EPAair_PM25_NC2018_processed.csv")
 ```
 
 
@@ -68,7 +128,18 @@ The completed exercise is due on Thursday, 7 February, 2019 before class begins.
 11. Save your processed dataset with the following file name: "EPAair_O3_PM25_NC1718_Processed.csv"
 
 ```{r}
+#7
+## Check column names are all the same
+colnames(Ozone.2017.processed) == colnames(Ozone.2018.processed) &&
+colnames(Ozone.2017.processed) == colnames(PM25.2017.processed) &&
+colnames(Ozone.2017.processed) == colnames(PM25.2018.processed) # TRUE
+
+## rbind all 4 datasets
+EPA.air <- rbind(Ozone.2017.processed, Ozone.2018.processed, PM25.2017.processed, PM25.2018.processed)
+
 #8
+
+EPA.air.wrangled <-
 
 #9
 
