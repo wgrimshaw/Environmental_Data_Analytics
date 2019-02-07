@@ -80,6 +80,7 @@ write.csv(NTL.nutrient.data.PeterPaul.gathered, row.names = FALSE,
 
 # Spread nutrient data into separate columns, the opposite of gather
 # the column does not need to be a factor, R will recognize
+# first argument made into new columns, second argument to values
 NTL.nutrient.data.PeterPaul.spread <- spread(NTL.nutrient.data.PeterPaul.gathered, nutrient, concentration)
 
 # Split components of cells into multiple columns

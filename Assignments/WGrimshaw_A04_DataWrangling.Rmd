@@ -34,7 +34,7 @@ The completed exercise is due on Thursday, 7 February, 2019 before class begins.
 
 ```{r}
 #1
-getwd() ## in Assignments folder
+getwd() ## in project folder, changed to assignment folder for knitting
 suppressMessages(library(tidyverse)) # suppress messages because of knitting LaTex error
 library(lubridate)
 
@@ -46,23 +46,23 @@ PM25.2018.raw <- read.csv("../Data/Raw/EPAair_PM25_NC2018_raw.csv", header = T)
 #2
 
 ## dimensions
-dim(Ozone.2017.raw)
-dim(Ozone.2018.raw)
-dim(PM25.2017.raw)
-dim(PM25.2018.raw)
+# dim(Ozone.2017.raw)
+# dim(Ozone.2018.raw)
+# dim(PM25.2017.raw)
+# dim(PM25.2018.raw)
 
 ## column names
-colnames(Ozone.2017.raw)
-colnames(Ozone.2018.raw)
-colnames(PM25.2017.raw)
-colnames(PM25.2018.raw)
+# colnames(Ozone.2017.raw)
+# colnames(Ozone.2018.raw)
+# colnames(PM25.2017.raw)
+# colnames(PM25.2018.raw)
 
 ## summary statistics
-summary(Ozone.2017.raw)
-summary(Ozone.2017.raw$Site.Name)
-summary(Ozone.2018.raw)
-summary(PM25.2017.raw)
-summary(PM25.2018.raw)
+# summary(Ozone.2017.raw)
+# summary(Ozone.2017.raw$Site.Name)
+# summary(Ozone.2018.raw)
+# summary(PM25.2017.raw)
+# summary(PM25.2018.raw)
 
 ```
 
@@ -120,7 +120,7 @@ write.csv(x = PM25.2018.processed, row.names = F,
 7. Combine the four datasets with `rbind`. Make sure your column names are identical prior to running this code. 
 8. Wrangle your new dataset with a pipe function (%>%) so that it fills the following conditions: 
 
-* Sites: Blackstone, Bryson City, Castle Hayne, Leggett, Triple Oak
+* Sites: Blackstone, Bryson City, Triple Oak
 * Add columns for "Month" and "Year" by parsing your "Date" column (hint: `separate` function or `lubridate` package)
 
 9. Spread your datasets such that AQI values for ozone and PM2.5 are in separate columns. Each location on a specific date should now occupy only one row.
@@ -139,14 +139,26 @@ EPA.air <- rbind(Ozone.2017.processed, Ozone.2018.processed, PM25.2017.processed
 
 #8
 
-EPA.air.wrangled <-
+EPA.air.wrangled <- EPA.air %>%
+  ## filter by site name to select those rows
+  filter(Site.Name == "Blackstone" | Site.Name == "Bryson City" | Site.Name == "Triple Oak") %>%
+  ## mutate to separate year and month in new columns
+  mutate(Month = month(Date)) %>%
+  mutate(Year = year(Date))
+  
+#9 Spread dialy_aqi_value by aqs_parameter_description
 
-#9
+EPA.air.tidy <- EPA.air.wrangled %>%
+  spread(AQS_PARAMETER_DESC, DAILY_AQI_VALUE)
 
 #10
 
+dim(EPA.air.tidy)
+
 #11
 
+write.csv(x = EPA.air.tidy, row.names = F,
+          file = "../Data/Processed/EPAair_O3_PM25_NC1718_Processed.csv")
 ```
 
 
@@ -158,10 +170,23 @@ b. A summary table of the mean, minimum, and maximum AQI values of O3 and PM2.5 
 
 ```{r}
 #12a
-
+EPA.air.monthly.summary <- EPA.air.tidy %>%
+  group_by(Month) %>%
+  summarize(meanO3 = mean(Ozone, na.rm = T),
+            meanPM25 = mean(PM2.5, na.rm = T)
+            )
 #12b
-
+EPA.air.site.summary <- EPA.air.tidy %>%
+  group_by(Site.Name) %>%
+  summarize(meanO3 = mean(Ozone, na.rm = T),
+            minO3 = min(Ozone, na.rm = T),
+            maxO3 = max(Ozone, na.rm = T),
+            meanPM25 = mean(PM2.5, na.rm = T),
+            minPM25 = min(PM2.5, na.rm = T),
+            maxPM25 = max(PM2.5, na.rm = T)
+            )
 #13
-
+print(EPA.air.monthly.summary)
+print(EPA.air.site.summary)
 ```
 
