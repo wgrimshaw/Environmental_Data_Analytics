@@ -160,16 +160,21 @@ print(tempvsdepth)
 
 NvsP <-
   ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth)) +
-  geom_point() #+
-  #geom_smooth(method = lm) +
-  #geom_abline(aes(slope = 16, intercept = 0))
+  geom_point() +
+  geom_smooth(method = lm) + # line of best fit, linear method used
+  geom_abline(aes(slope = 16, intercept = 0)) # specify linear line, default black and solid, can change color and type outside of aesthetic call
+  # this system appears to have more nitrogen than phosphorous
 print(NvsP)
+## gray points did not have a depth measurement
 
 # Exercise: Plot relationships between air quality measurements
 
 # 1. 
 # Plot AQI values for ozone by PM2.5, colored by site. 
 # Add a line of best fit for the linear regression of these variables.
+ggplot(EPAair) +
+  geom_point(aes(x = PM2.5, y = Ozone, color = Site.Name)) +
+  geom_smooth(method = lm, aes(x = PM2.5, y = Ozone), color = "black")
 
   
 ```
@@ -179,19 +184,22 @@ print(NvsP)
 ```{r, fig.height = 3, fig.width = 4, warning = FALSE}
  # Barplot + error bars
 PeterPaul.nutrient.summaries <- PeterPaul.nutrients.gathered %>%
-  group_by(lakename, nutrient) %>%
+  group_by(lakename, nutrient) %>% # separate group by functions will override previous ones, must be in the same call
   summarise(sd = sd(concentration), 
             mean = mean(concentration))
 
 Nutrientplot <- 
   ggplot(PeterPaul.nutrients.gathered) +
   geom_bar(aes(x = lakename, y = concentration, fill = as.factor(nutrient)), # why did we use fill?
+           # 
            position = "dodge", stat = "summary", fun.y = "mean")             # what's happening here?
 print(Nutrientplot)
+## dodge makes the bars not stack on top of one another
 
 Nutrientplot2 <- 
   ggplot(PeterPaul.nutrient.summaries, aes(x = lakename, y = mean, fill = as.factor(nutrient))) + #
   geom_bar(stat = "identity", position = "dodge") + # what does the stat command do?
+  # tells it what statistic to plot, in this case we are already plotting from the summary table
   geom_errorbar(aes(ymin = mean-sd, ymax = mean+sd), # how do we specify error bars?
                  position = "dodge")
 print(Nutrientplot2)
@@ -203,6 +211,7 @@ Nutrientplot3 <-
   ggplot(PeterPaul.nutrients.gathered, aes(x = lakename, y = concentration)) +
   geom_boxplot(aes(color = nutrient)) # Why didn't we use "fill"?
 print(Nutrientplot3)
+## gave us a better idea of the number of outliers
 
 # Dot plot
 Nutrientplot4 <-
@@ -239,6 +248,22 @@ print(Nutrientplot7)
 # 1. 
 # Create a bar chart plus standard deviation error bars for PM2.5, divided by year. 
 # Create separate bars for each site. 
+
+## first create summary table
+EPA.summary <- EPAair %>%
+  group_by(Year, Site.Name) %>%
+  summarize(sd = sd(PM2.5, na.rm = T), mean = mean(PM2.5, na.rm = T))
+
+ggplot(EPA.summary, aes(x = Year, y = mean, fill = Site.Name)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  geom_errorbar(aes(ymin = mean-sd, ymax = mean+sd), position = "dodge")
+
+## attempt to create error bars without summary table, but does not work
+ggplot(EPAair, aes(x = Year, y = PM2.5, fill = Site.Name)) +
+  geom_bar(position = "dodge", stat = "summary", fun.y = mean) +
+  geom_errorbar(aes(ymin = mean(PM2.5, na.rm = T) - sd(PM2.5, na.rm = T),
+                    ymax = mean(PM2.5, na.rm = T) + sd(PM2.5, na.rm = T)),
+                position = "dodge")
 
 # 2. 
 # Create a new plot that better depicts the distribution of PM2.5 concentrations. 
