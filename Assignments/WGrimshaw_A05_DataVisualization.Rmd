@@ -32,18 +32,32 @@ The completed exercise is due on Thursday, 14 February, 2019 before class begins
 
 2. Make sure R is reading dates as date format, not something else (hint: remember that dates were an issue for the USGS gauge data).
 
-```{r}
+```{r, warning=FALSE}
 #1
-getwd(); # Course project directory
+getwd(); # Course project directory, but appears to change upon knitting
+# setwd("/Users/walkergrimshaw/Documents/Duke/Courses/Spring_2019/Environmental_Data_Analytics/Assignments")
 suppressMessages(library(tidyverse))
-library(lubridate)
+library(lubridate) # easy date manipulation
+library(gridExtra) # multiple plots in a figure
+library(RColorBrewer)
+
 ## Peter Paul physchem processed
-PP.chem.phys <- read.csv("./Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv",
-                         header = T)
+PP.chem.phys <- 
+  read.csv("../Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv",
+           header = T)
+## Peter Paul Nutrients Processed
+PP.chem.nutrients <- 
+  read.csv("../Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv",
+           header = T)
+## Peter Paul Nutrients Processed and gathered
+PP.nutrients.gathered <-
+  read.csv("../Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv",
+           header = T)
+
 ## USGS Stream gauge
-USGS.raw <- read.csv("./Data/Raw/USGS_Site02085000_Flow_Raw.csv", header = T)
+USGS.raw <- read.csv("../Data/Raw/USGS_Site02085000_Flow_Raw.csv", header = T)
 ## EPA Ecotox
-EPA.Ecotox.Raw <- read.csv("./Data/Raw/ECOTOX_Neonicotinoids_Mortality_raw.csv",
+EPA.Ecotox.Raw <- read.csv("../Data/Raw/ECOTOX_Neonicotinoids_Mortality_raw.csv",
                            header = T)
 
 #2
@@ -51,6 +65,9 @@ class(EPA.Ecotox.Raw$Pub..Year); # only contains the year, so leave as integer
 class(PP.chem.phys$sampledate); # factor
 ## change PeterPaul sampledate column to be formatted as date
 PP.chem.phys$sampledate <- as.Date(PP.chem.phys$sampledate, format = "%m/%d/%y")
+PP.chem.nutrients$sampledate <- as.Date(PP.chem.nutrients$sampledate, format = "%m/%d/%y")
+PP.nutrients.gathered$sampledate <- as.Date(PP.nutrients.gathered$sampledate,
+                                            format = "%Y-%m-%d")
 
 class(USGS.raw$datetime); # factor
 ## format to date, then correct the dates formatted to the future
@@ -65,7 +82,11 @@ USGS.raw$datetime <- as.Date(ifelse(USGS.raw$datetime > Sys.Date(),
 
 ```{r}
 #3
+WalkersTheme <- theme_bw(base_size = 12) +
+  theme(legend.position = "top")
 
+## Make my newly created theme the default theme for this assignment
+theme_set(WalkersTheme)
 ```
 
 ## Create graphs
@@ -75,9 +96,21 @@ Hint: a good way to build graphs is to make them ugly first and then create more
 
 4. [NTL-LTER] Plot total phosphorus by phosphate, with separate aesthetics for Peter and Paul lakes. Add a line of best fit and color it black.
 
-```{r}
+```{r, warning=FALSE}
 #4
 
+ggplot(PP.chem.nutrients, aes(x = po4, y = tp_ug)) +
+  geom_point(aes(color = lakename)) +
+  labs(x = expression(paste("PO"[4]* " (", mu, "g/L)")),
+       y = expression(paste("Total P (", mu, "g/L)")),
+       color = NULL) +
+  geom_smooth(method = lm, color = "black") +
+  ## non-default colors
+  scale_color_brewer(palette = "Set1") +
+  ## lower the x limit to 50 to get rid of what appears to be an error value at above 300
+  xlim(0,50) +
+  ## slightly increase size of legend text
+  theme(legend.text=element_text(size=11))
 ```
 
 
@@ -85,24 +118,85 @@ Hint: a good way to build graphs is to make them ugly first and then create more
 
 ```{r}
 #5
+## facet labels
+nutrient.labels <- c(nh34 = "Ammonium", no23 = "Nitrates and Nitrites",
+                     po4 = "Phosphate", tn_ug = "Total Nitrogen",
+                     tp_ug = "Total Phosphorous")
 
+ggplot(PP.nutrients.gathered) +
+  geom_point(aes(x = sampledate, y = concentration, color = depth)) +
+  ## dates from 1991 to 2016, break every 4 years
+  scale_x_date(limits = as.Date(c("1991-01-01", "2016-12-31")),
+               date_breaks = "4 years", date_labels = "%Y") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Year",
+       y = expression(paste("Concentration (", mu, "g/L)")),
+       color = "Depth (m)") +
+  facet_wrap( ~ nutrient, labeller = labeller(nutrient = nutrient.labels)) +
+  ## put legend on right to be intuitive with depth
+  theme(legend.position = "right") +
+  ## flip legend color so darker is deeper
+  scale_color_continuous(trans = "reverse")
 ```
 
 
-6. [USGS gauge] Plot discharge by date. Create two plots, one with the points connected with geom_line and one with the points connected with geom_smooth (hint: do not use method = "lm"). 
+6. [USGS gauge] Plot discharge by date. Create two plots, one with the points connected with geom_line and one with the points connected with geom_smooth (hint: do not use method = "lm"). Place these graphs on the same plot (hint: ggarrange or something similar)
 
 ```{r}
 #6
+## discharge in cubic feet per second
+
+discharge.line <- 
+  ggplot(USGS.raw, aes(x = datetime, y = X165986_00060_00001)) +
+  geom_line() +
+  labs(x = "Year", y = "Discharge (cfs)")
+
+discharge.smooth <-
+  ggplot(USGS.raw, aes(x = datetime, y = X165986_00060_00001)) +
+  geom_smooth() +
+  labs(x = "Year", y = "Discharge (cfs)")
+
+## print the two figures together
+grid.arrange(discharge.line, discharge.smooth)
 
 ```
 Question: How do these two types of lines affect your interpretation of the data?
 
-> Answer:
+> Answer: The first plot shows that the majority of discharge measurements are relatively low, and it allows the viewer to roughly determine the frequency and magnitude of flood events. The second line shows average trends over time. Though it erroneously shows an apparent drought in the 70s and 80s due to a lack of data, it also shows that stream discharge is increasing since 2010. However, the viewer is unable to see single events in the second plot.
 
 7. [ECOTOX Neonicotinoids] Plot the concentration, divided by chemical name. Choose a geom that accurately portrays the distribution of data points.
 
 ```{r}
 #7 
+## Use filter to choose all rows with units of AI mg/L
+EPA.Ecotox.mgL <- filter(EPA.Ecotox.Raw, Conc..Units..Std. == "AI mg/L")
+
+## geometries commented out below did not show distribution well because of range of outliers of Imidacloprid
+
+# ggplot(EPA.Ecotox.mgL, aes(x = Chemical.Name, y = Conc..Mean..Std.)) +
+#   geom_boxplot()
+# 
+# ggplot(EPA.Ecotox.mgL, aes(x = Chemical.Name, y = Conc..Mean..Std.)) +
+#   geom_violin()
+# 
+# ggplot(EPA.Ecotox.mgL, aes(x = Conc..Mean..Std., color = Chemical.Name, stat(density))) +
+#   geom_freqpoly(bins = 50) +
+#   facet_wrap(~Chemical.Name)
+
+## try geom_bar with error bars
+EPA.Ecotox.Summary <- EPA.Ecotox.mgL %>%
+  group_by(Chemical.Name) %>%
+  summarize(sd = sd(Conc..Mean..Std.),
+            mean = mean(Conc..Mean..Std.))
+
+ggplot(EPA.Ecotox.Summary, aes(x = Chemical.Name, y = mean, fill = Chemical.Name)) +
+  geom_bar(stat = "identity") +
+  ## error bars extend below 0, so only show max error bar
+  geom_errorbar(aes(ymin = mean, ymax = mean+sd)) +
+  labs(x = NULL, y = "Concentration (mg/L)") +
+  theme(legend.position = "none") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_fill_brewer(palette = "Set3")
 
 ```
 
