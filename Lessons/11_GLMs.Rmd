@@ -69,11 +69,13 @@ The object of a one sample test is to test the null hypothesis that the mean of 
 
 Are Ozone levels below the threshold for "good" AQI index (0-50)?
 
+y = alpha1 + alpha2 + epsilon
+
 ```{r}
 summary(EPAair$Ozone)
 
 # Evaluate assumption of normal distribution
-shapiro.test(EPAair$Ozone)
+shapiro.test(EPAair$Ozone) ## data do not fit a normal distribution
 ggplot(EPAair, aes(x = Ozone)) +
   geom_histogram(stat = "count")
 qqnorm(EPAair$Ozone); qqline(EPAair$Ozone)
@@ -84,7 +86,7 @@ O3.onesample
 
 What information does the output give us? How might we report this information in a report?
 
-> ANWSER:
+> ANWSER: We reject the null hypothesis that the mean is equal to or greater than 50 (t-test, t=-41.9, df = 1084, p<0.001). Ozone AQi values in 2017-2018 were significantly lower than 50.
 
 ### Two-sample t-test
 The two-sample *t* test is used to test the hypothesis that the mean of two samples is equivalent. Unlike the one-sample tests, a two-sample test requires a second assumption that the variance of the two groups is equivalent. Are Ozone levels different between Blackstone and Bryson City?
@@ -92,6 +94,7 @@ The two-sample *t* test is used to test the hypothesis that the mean of two samp
 ```{r}
 shapiro.test(EPAair$Ozone[EPAair$Site.Name == "Blackstone"])
 shapiro.test(EPAair$Ozone[EPAair$Site.Name == "Bryson City"])
+## both non-normal
 var.test(EPAair$Ozone ~ EPAair$Site.Name)
 
 ggplot(EPAair, aes(x = Ozone, color = Site.Name)) +
@@ -103,8 +106,9 @@ O3.twosample
 O3.twosample$p.value
 
 # Format as a GLM
-O3.twosample2 <- lm(EPAair$Ozone ~ EPAair$Site.Name)
+O3.twosample2 <- lm(EPAair$Ozone ~ EPAair$Site.Name) # Ozone by Site Name
 summary(O3.twosample2)
+## output as reference to intercept
 ```
 ### Non-parametric equivalent of t-test: Wilcoxon test
 
@@ -113,8 +117,10 @@ When we wish to avoid the assumption of normality, we can apply *distribution-fr
 ```{r}
 O3.onesample.wilcox <- wilcox.test(EPAair$Ozone, mu = 50, alternative = "less")
 O3.onesample.wilcox
+## gives V statistic, rather than t statistic
 O3.twosample.wilcox <- wilcox.test(EPAair$Ozone ~ EPAair$Site.Name)
 O3.twosample.wilcox
+## gives W statistic for two sample test
 ```
 
 ### One-way ANOVA
@@ -122,6 +128,7 @@ A one-way ANOVA is the same test in practice as a two-sample t-test but for thre
 
 Are PM2.5 levels different between Blackstone, Bryson City, and Triple Oak?
 ```{r}
+## independently test normality for each site
 shapiro.test(EPAair$PM2.5[EPAair$Site.Name == "Blackstone"])
 shapiro.test(EPAair$PM2.5[EPAair$Site.Name == "Bryson City"])
 shapiro.test(EPAair$PM2.5[EPAair$Site.Name == "Triple Oak"])
@@ -130,18 +137,19 @@ ggplot(EPAair, aes(x = PM2.5, color = Site.Name)) +
   geom_freqpoly(stat = "count")
 qqnorm(EPAair$PM2.5); qqline(EPAair$PM2.5)
 
-bartlett.test(EPAair$PM2.5 ~ EPAair$Site.Name)
+## variance test to test homogeneity of variances of more than two data sets
+bartlett.test(EPAair$PM2.5 ~ EPAair$Site.Name) # variances not significantly different from one another
 
 # Format as a GLM
 PM2.5.anova <- lm(EPAair$PM2.5 ~ EPAair$Site.Name)
 summary(PM2.5.anova)
 
-# Format as an aov
+# Format as an aov, requires a post-hoc Tukey test to get pairwise comparisons
 PM2.5.anova2 <- aov(EPAair$PM2.5 ~ EPAair$Site.Name)
 summary(PM2.5.anova2)
 
 # Run a post-hoc test for pairwise differences
-TukeyHSD(PM2.5.anova2)
+TukeyHSD(PM2.5.anova2) ## triple oak and bryson city not siginificantly different from one another
 
 # Plot the results
 # How might you edit this graph to make it attractive?
@@ -152,7 +160,7 @@ print(PM2.5.anova.plot)
 ```
 What information does the output give us? How might we report this information in a report?
 
-> ANSWER:
+> ANSWER: (ANOVA; F = 16.16, df = 1898, p < 0.001)
 
 ### Non-parametric equivalent of ANOVA: Kruskal-Wallis Test
 As with the Wilcoxon test, the Kruskal-Wallis test is the non-parametric counterpart to the one-way ANOVA. Here, the data from two or more independent samples are replaced with their ranks without regard to the grouping AND based on the between-group sum of squares calculations. 
@@ -176,6 +184,7 @@ PM2.5.kw
 A two-way ANOVA allows us to examine the effects of two categorical explanatory variables on a continuous response variable. Let's look at the NTL-LTER nutrient dataset for Peter and Paul lakes. What if we wanted to know if total nitrogen concentrations differed based on lake and depth? 
 
 ```{r}
+## Again, can run two-way ANOVA as lm() or aov()
 TNanova.main <- lm(PeterPaul.nutrients$tn_ug ~ PeterPaul.nutrients$lakename + PeterPaul.nutrients$depth_id)
 summary(TNanova.main)
 
@@ -199,6 +208,7 @@ The output gives test statistics for each explanatory variable as well as the in
 
 ```{r}
 TNanova.interaction <- aov(PeterPaul.nutrients$tn_ug ~ PeterPaul.nutrients$lakename * PeterPaul.nutrients$depth_id)
+## * indicates multiplying all possible combinations
 summary(TNanova.interaction)
 
 ```
