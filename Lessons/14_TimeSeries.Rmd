@@ -40,6 +40,7 @@ PeterPaul.nutrients$sampledate <- as.Date(PeterPaul.nutrients$sampledate,
                                                format = "%Y-%m-%d")
 USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, 
                               format = "%m/%d/%y")
+## remember some dates are in the future, but not changing here
 
 mytheme <- theme_classic(base_size = 14) +
   theme(axis.text = element_text(color = "black"), 
@@ -63,11 +64,12 @@ A Mann-Kendall test will analyze whether there is a monotonic trend in the respo
 # Wrangle our dataset
 PeterPaul.nutrients.surface <- 
   PeterPaul.nutrients %>%
-  select(-lakeid, -depth_id, -comments) %>%
+  select(-lakeid, -depth_id, -comments) %>% # remove ones with minus sign
   filter(depth == 0) %>%
-  filter(!is.na(tp_ug))
+  filter(!is.na(tp_ug)) # remove nas associated with total phosphorous
 
 # Initial visualization of data
+## Paul lake acts as a control
 ggplot(PeterPaul.nutrients.surface, aes(x = sampledate, y = tp_ug, color = lakename)) + 
   geom_point() +
   scale_color_manual(values = c("#7fcdbb", "#253494"))
@@ -77,7 +79,11 @@ Peter.nutrients.surface <- filter(PeterPaul.nutrients.surface, lakename == "Pete
 Paul.nutrients.surface <- filter(PeterPaul.nutrients.surface, lakename == "Paul Lake")
 
 # Run a Mann-Kendall test
+# trend over time
+# z indicates direction of trend and magnitude of confidence (p-value)
 mk.test(Peter.nutrients.surface$tp_ug)
+
+# S is cumulative change in tested value
 
 ```
 
@@ -88,6 +94,8 @@ Pettitt's test is also included in the `trend` package. This nonparametric test 
 ```{r}
 # Test for change point
 pettitt.test(Peter.nutrients.surface$tp_ug)
+# p-value indicates if test has detected a change point
+# k point is the observation number
 
 # Run separate Mann-Kendall for each change point
 mk.test(Peter.nutrients.surface$tp_ug[1:34])
@@ -95,6 +103,7 @@ mk.test(Peter.nutrients.surface$tp_ug[35:132])
 
 # Is there a second change point?
 pettitt.test(Peter.nutrients.surface$tp_ug[35:132])
+# add k of 79 to to the starting point, 35
 
 # Run another Mann-Kendall for the second change point
 mk.test(Peter.nutrients.surface$tp_ug[35:113])
@@ -107,7 +116,11 @@ pettitt.test(Paul.nutrients.surface$tp_ug)
 # Add vertical lines to the original graph to represent change points
 ggplot(PeterPaul.nutrients.surface, aes(x = sampledate, y = tp_ug, color = lakename)) + 
   geom_point() +
-  scale_color_manual(values = c("#7fcdbb", "#253494"))
+  scale_color_manual(values = c("#7fcdbb", "#253494")) +
+  geom_vline(xintercept = as.Date("1993-05-20"),
+             linetype = "dashed", color = "#253494") +
+  geom_vline(xintercept=as.Date("1998-01-01"),
+             linetype= "dashed", color = "#253494")
 
 ```
 ### Seasonal Mann-Kendall
@@ -116,14 +129,17 @@ Like a **Mann-Kendall Test**, the **Seasonal Mann-Kendall Test**, or **Hirsch-Sl
 
 For instance, we might want to know whether there is a change in discharge of the Eno River over the last 10 years.
 ```{r}
-# Wrangle the USGS dataset
+# Wrangle the USGS dataset for non-future points
 USGS.flow.data.trimmed <- USGS.flow.data %>%
   select(datetime, discharge.mean) %>%
   filter(datetime > as.Date("2008-12-31") & datetime < as.Date("2019-01-01"))
 
 # Visualize the data
 ggplot(USGS.flow.data.trimmed, aes(x = datetime, y = discharge.mean)) +
-  geom_point(size = 0.5, alpha = 0.5)
+  geom_point(size = 0.5, alpha = 0.5) +
+  ## log axis to keep units and show many low values better
+  scale_y_log10()
+## there are some missing points if we look at the data
 ```
 
 ### Interpolation
@@ -139,7 +155,7 @@ Some situations may require us to predict values for data points that fall withi
 
 Question: Under what circumstances would you consider each of these options for interpolation? 
 
-> ANSWER: 
+> ANSWER: linear or spline because relatively continuous data. linear more reliable for many environmental applications.
 
 Tip: Check your dataset to see if there is an NA value in the first row. You may need to add a value for that first row or trim the dataset so that the new first row corresponds to the first measurement.
 
@@ -148,21 +164,26 @@ Tip: Check your dataset to see if there is an NA value in the first row. You may
 USGS.flow.data.interpolated <- approx(USGS.flow.data.trimmed$datetime,
                                       USGS.flow.data.trimmed$discharge.mean, 
                                       method = "linear", n = 3630)
+## need n=number of data points
 
-# Turn the interpolated dataset into a proper dataframe
+# Turn the interpolated dataset, list, into a proper dataframe
 USGS.flow.data.interpolated <- do.call(cbind.data.frame, USGS.flow.data.interpolated)
 names(USGS.flow.data.interpolated) <- c("Date", "Discharge")
 USGS.flow.data.interpolated$Date <- as.Date(USGS.flow.data.interpolated$Date, 
                                             origin = "1970/01/01")
 
 # Create a time series object
+## every month, starting in 2009
 USGS.flow.data.timeseries <- ts(USGS.flow.data.interpolated$Discharge, 
                                 start = c(2009, 1) ,frequency = 12)
 
 # Run a Seasonal Mann-Kendall test
 USGS.smktest <- smk.test(USGS.flow.data.timeseries)
 USGS.smktest
+## s much lower than varS, variable dataset
 summary(USGS.smktest)
+## Is there a significant trend for each season?
+## output shows november discharges are changing significantly
 ```
 
 Interpreting results of the Seasonal Mann-Kendall Test: 
@@ -175,4 +196,4 @@ Interpreting results of the Seasonal Mann-Kendall Test:
   
 Question: How would you interpret the results of the Seasonal Mann-Kendall test for this example?
 
-> ANSWER: 
+> ANSWER: There is an increasing trend, more so in winter months!
