@@ -56,6 +56,7 @@ library(tidyverse, quietly = TRUE)
 
 #Read the data 2017 Ozone data
 EPAair_PM25_NC2018_raw <- read.csv("./Data/Raw/EPAair_PM25_NC2018_raw.csv")
+## has latitude and longitude
 
 #Reduce our data to just one record for each location, computing mean and max daily AQI values
 EPAair_PM_avg <- EPAair_PM25_NC2018_raw %>% 
@@ -65,7 +66,7 @@ EPAair_PM_avg <- EPAair_PM25_NC2018_raw %>%
 
 #Plot the data using longitude and latitude as X and Y
 ggplot(EPAair_PM_avg, aes(x=SITE_LONGITUDE, y=SITE_LATITUDE)) + 
-  geom_point(aes(color=meanPM), size=4) #+ coord_equal() 
+  geom_point(aes(color=meanPM), size=4) + coord_equal() 
 ```
 
 This is more of a proof of concept than a useful map. We can sort of visualize spatial patterns in the data, but without context of scale or location, it's somewhat difficult. We can greatly improve this map with the help of some mapping packages for R...
@@ -77,6 +78,8 @@ See https://rdrr.io/cran/mapview/man/mapviewOptions.html for more info.
 #(Install and) Load the mapView package
 #install.packages('mapview')
 library(mapview)
+#install.packages("group_map")
+#library(group_map)
 
 #Set the available map backgrounds
 mapviewOptions(basemaps = c('OpenStreetMap','Esri.WorldImagery','Stamen.Toner','Stamen.Watercolor'))
@@ -108,7 +111,7 @@ library(leaflet)
 
 #Create the map and add Tiles
 myMap  <- leaflet(data=EPAair_PM_avg) %>% 
-  addTiles() %>% 
+  addTiles() %>% # tiles are background maps, default is from open street maps
   addCircleMarkers(~SITE_LONGITUDE,~SITE_LATITUDE,
                    radius=(~meanPM*2),
                    stroke = FALSE, 
@@ -186,9 +189,10 @@ With our EPA data now spatially enabled, we can perform spatial analysis with th
 
 ```{r Spatial Analysis: Geometric operations}
 #Buffer the Durham Armory point 0.1 degrees
+# first filter then create a buffer
 Durham_buffer <- EPAair_PM_avg_sf %>% 
   filter(Site.Name == 'Durham Armory') %>% 
-  st_buffer(0.1)
+  st_buffer(0.1) # geometry is in lat lon, so this is degrees
 
 #View the result
 mapView(Durham_buffer)
@@ -225,7 +229,7 @@ Some CRS, however, do not have an associated EPSG code, and for those, we can us
 
 
 ```{r Explore the CRS of our dataset}
-#Recall what the CRS is of our EPA dataset
+#Recall what the CRS is of our EPA dataset, Coordinate Reference System
 st_crs(EPAair_PM_avg_sf)
 ```
 
