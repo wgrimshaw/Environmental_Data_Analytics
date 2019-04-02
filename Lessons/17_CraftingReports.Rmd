@@ -31,14 +31,39 @@ A handy cheat sheet for R markdown can be found [here](https://www.rstudio.com/w
 
 <Fill in our discussion below with bullet points. Use italics and bold for emphasis>
 
+- bullet, but need an empty line before the bullet
++ bullet
+* bullet
++ code output and text or notes all in the same document
++ allows knitting to a variety of formats
++ legible code and output
++ git friendly
++ reproducible
++ updating capabilities
++ flexible formatting
++ simple syntax and autoreferencing
+
+
+
 ## TEXT EDITING CHALLENGE
 
 Create a table below that details the example datasets we have been using in class. The first column should contain the name of the dataset and the second column should include some relevant information about the dataset.
+
+Dataset | Characteristics
+------- | ---------------
+Neonicotinoids | Mortality levels of chemicals
+USGS | Flow rates and stuff
+LTER | Lakes in Wisconsin
 
 
 ## R CHUNK EDITING CHALLENGE
 ### Installing packages
 Create an R chunk below that installs the package `knitr`. Instead of commenting out the code, customize the chunk options such that the code is not evaluated (i.e., not run). 
+
+```{r, eval = FALSE}
+install.packages('knitr')
+```
+
 
 
 ### Setup
@@ -48,6 +73,23 @@ Load the NTL-LTER_Lake_Nutrients_Raw dataset, display the head of the dataset, a
 
 Customize the chunk options such that the code is run but is not displayed in the final document.
 
+```{r Setup, echo=FALSE}
+getwd()
+library(tidyverse)
+library(knitr)
+
+WalkersTheme <- theme_bw(base_size = 12) +
+  theme(legend.position = "top")
+
+theme_set(WalkersTheme)
+## read data
+Lake_data <- read.csv("../Data/Raw/NTL-LTER_Lake_Nutrients_Raw.csv")
+head(Lake_data)
+## date
+Lake_data$sampledate <- as.Date(Lake_data$sampledate, format = "%m/%d/%y")
+```
+
+
 
 ### Data Exploration, Wrangling, and Visualization
 Create an R chunk below to create a processed dataset do the following operations: 
@@ -55,14 +97,46 @@ Create an R chunk below to create a processed dataset do the following operation
 * Include all columns except lakeid, depth_id, and comments
 * Include only surface samples (depth = 0 m)
 
+```{r}
+Lake_surface <- Lake_data %>%
+  select(-lakeid, -depth_id, -comments) %>%
+  filter(depth == 0)
+```
+
 
 Create a second R chunk to create a summary dataset with the mean, minimum, maximum, and standard deviation of total nitrogen concentrations for each lake. Create a second summary dataset that is identical except that it evaluates total phosphorus. Customize the chunk options such that the code is run but not displayed in the final document. 
+
+```{r, echo = FALSE}
+## nitrogen summary by lake
+Nitrogen_summary <- Lake_data %>%
+  group_by(lakename) %>%
+  filter(!is.na(tn_ug)) %>%
+  summarize(mean = mean(tn_ug), minimum = min(tn_ug), maximum = max(tn_ug),
+            stdev = sd(tn_ug))
+
+## phosphorus summary by lake
+Phosphorus_summary <- Lake_data %>%
+  group_by(lakename) %>%
+  filter(!is.na(tp_ug)) %>%
+  summarize(mean = mean(tp_ug), minimum = min(tp_ug), maximum = max(tp_ug),
+            stdev = sd(tp_ug))
+```
 
 
 Create a third R chunk that uses the function `kable` in the knitr package to display two tables: one for the summary dataframe for total N and one for the summary dataframe of total P. Use the `caption = " "` code within that function to title your tables. Customize the chunk options such that the final table is displayed but not the code used to generate the table. 
 
+```{r, echo = FALSE}
+kable(x = Nitrogen_summary, format = "latex")
+kable(x = Phosphorus_summary, format = "latex", booktabs = T)
+```
+
 
 Create a fourth and fifth R chunk that generates two plots (one in each chunk): one for total N over time with different colors for each lake, and one with the same setup but for total P. Decide which geom option will be appropriate for your purpose, and select a color palette that is visually pleasing and accessible. Customize the chunk options such that the final figures are displayed but not the code used to generate the figures. In addition, customize the chunk options such that the figures are aligned on the left side of the page. Lastly, add a fig.cap chunk option to add a caption (title) to your plot that will display underneath the figure.
+
+```{r}
+ggplot(data = Lake_data) +
+  geom_point(aes(x = sampledate, y = tn_ug))
+```
 
 
 ### Other options
