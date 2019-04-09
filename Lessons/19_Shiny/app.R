@@ -35,7 +35,8 @@ ui <- navbarPage('probability distributions', id = 'nav', # specifies panels at 
                               tabsetPanel(position = 'below',
                                           tabPanel('distribution', plotOutput('ndist')),
                                           tabPanel('plot', plotOutput('nplot')),
-                                          tabPanel('test', verbatimTextOutput('ntest')))
+                                          tabPanel('test', verbatimTextOutput('ntest'))) 
+                                          # gives text output that the console would normally return
                             )
                           )
                  ),
@@ -45,12 +46,19 @@ ui <- navbarPage('probability distributions', id = 'nav', # specifies panels at 
                           sidebarLayout(
                             sidebarPanel(
                               sliderInput('pn',
-                                          'sample size'),
+                                          'sample size',
+                                          min = 0,
+                                          max = 500,
+                                          value = 100),
                               sliderInput('lambda',
-                                          '$$\\lambda$$'),
+                                          withMathJax('$$\\lambda$$'),
+                                          min = 0,
+                                          max = 10,
+                                          value = 1,
+                                          step = 0.1),
                               checkboxInput('phist', label = 'histogram', value = TRUE), 
                               checkboxInput('pdens', label = 'density', value = TRUE),
-                              colourInput('pcol', label = 'select a color')
+                              colourInput('pcol', label = 'select a color', value = '#667DFF')
                             ),
                             mainPanel(
                               tabsetPanel(position = 'below',
@@ -76,7 +84,10 @@ ui <- navbarPage('probability distributions', id = 'nav', # specifies panels at 
                                           max = 20,
                                           value = 10),
                               sliderInput('bprob',
-                                          'probability'),
+                                          'probability',
+                                          min = 0,
+                                          max = 1,
+                                          value = 0.5),
                               checkboxInput('bhist', label = 'histogram', value = TRUE), 
                               checkboxInput('bdens', label = 'density', value = TRUE),
                               colourInput('bcol', label = 'select a color', value = '#FF6666')
@@ -111,8 +122,8 @@ ui <- navbarPage('probability distributions', id = 'nav', # specifies panels at 
                                           max = 10,
                                           value = 1,
                                           step = 0.1),
-                              checkboxInput('ghist', label = 'histogram'), 
-                              checkboxInput('gdens', label = 'density'),
+                              checkboxInput('ghist', label = 'histogram', value = T), 
+                              checkboxInput('gdens', label = 'density', value = T),
                               colourInput('gcol', label = 'select a color', value = '#FF6666')
                             ),
                             mainPanel(
@@ -148,6 +159,7 @@ server <- function(input, output) {
     
     p <- ggplot() + scale_x_continuous(limits = c(-20, 20))
     if(input$nhist) p <- p + geom_histogram(aes(x, y = ..density..), bins = bins, colour = 'black', fill = 'white') 
+    ## ..density.. scales the histogram to be a density histogram bounded between 0 and 1
     if(input$ndens) p <- p + geom_density(aes(x), alpha = 0.2, fill = input$ncol) 
     p + theme_minimal()
   })
@@ -191,6 +203,10 @@ server <- function(input, output) {
     
     p <- ggplot() + scale_x_continuous(limits = c(0, 20))
 
+    if(input$phist) p <- p + geom_histogram(aes(x, y = ..density..), bins = bins, colour = 'black', fill = 'white') 
+    ## ..density.. scales the histogram to be a density histogram bounded between 0 and 1
+    if(input$pdens) p <- p + geom_density(aes(x), alpha = 0.2, fill = input$ncol) 
+    
     p + theme_minimal()
   })
     # qq plot
@@ -231,7 +247,7 @@ server <- function(input, output) {
     
     x <- rbinom(input$bn, input$bsize, input$bprob)
     
-    p <- ggplot() 
+    p <- ggplot() + scale_x_continuous(limits = c(0, 20))
     if(input$bhist) p <- p + geom_histogram(aes(x, y = ..density..), bins = bins, colour = 'black', fill = 'white')
     if(input$bdens) p <- p + geom_density(aes(x), alpha = 0.2, fill = input$bcol)
     p + theme_minimal()
@@ -244,7 +260,7 @@ server <- function(input, output) {
     x <- rbinom(input$bn, input$bsize, input$bprob) 
     
     qqnorm(x); qqline(x)
-  }
+  })
   
     # shapiro wilks test
   
@@ -274,7 +290,7 @@ server <- function(input, output) {
     
     set.seed(1001) 
     
-    x <- rgamma() 
+    x <- rgamma(input$gn, input$gsize, input$gprob) 
     
     p <- ggplot() + scale_x_continuous(limits = c(0, 20))
     if(input$ghist) p <- p + geom_histogram(aes(x, y = ..density..), bins = bins, colour = 'black', fill = 'white') # add hist if checked

@@ -62,8 +62,8 @@ names(klamath_spread)[9] <- c("Organic_Carbon")
 ## boxplots by site
 ## nitrogen levels at each site over time
 ggplot(klamath_spread) +
-  geom_boxplot(aes(x = Location, y = Nitrogen)) #+
-  #facet_wrap(vars(Location), nrow = 2)
+  geom_line(aes(x = Date, y = Organic_Carbon)) +
+  facet_wrap(vars(Location), nrow = 2)
 
 ## phosphorus at each site over time
 ggplot(klamath_spread) +
@@ -76,6 +76,9 @@ ggplot(klamath_spread) +
   #facet_wrap(vars(Location), nrow = 2)
 
 summary(klamath_spread$Organic_Carbon)
+
+## power analysis: how many observations do I need to make for my test to be robust and
+## show a relationship if there is one
 ```
 
 ```{r}

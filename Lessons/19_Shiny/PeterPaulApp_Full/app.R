@@ -1,3 +1,4 @@
+## Full App
 #### Load packages ----
 library(shiny)
 library(shinythemes)
@@ -11,7 +12,7 @@ nutrient_data <- nutrient_data %>%
   select(lakename, sampledate:po4)
 
 #### Define UI ----
-ui <- fluidPage(theme = shinytheme("yeti"),
+ui <- fluidPage(theme = shinytheme("superhero"),
   titlePanel("Nutrients in Peter Lake and Paul Lake"),
   sidebarLayout(
     sidebarPanel(
@@ -71,7 +72,8 @@ server <- function(input, output) {
           #scale_fill_viridis_c(option = "viridis", begin = 0, end = 0.8, direction = -1)
       })
        
-    # Create a table that generates data for each point selected on the graph  
+    # Create a table that generates data for each point selected on the graph
+    # use renderDataTable() to play well with dates
        output$mytable <- renderTable({
          brush_out <- brushedPoints(filtered_nutrient_data(), input$scatterplot_brush)
        })
